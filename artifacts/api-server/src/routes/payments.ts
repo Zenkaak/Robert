@@ -13,6 +13,7 @@ interface PaymentRecord {
   resultDesc?: string;
   amount?: number;
   phone?: string;
+  recipientPhone?: string;
   offerName?: string;
   createdAt: string;
 }
@@ -33,7 +34,7 @@ router.post("/payments/stkpush", async (req, res): Promise<void> => {
     return;
   }
 
-  const { phone, offerId, amount } = parsed.data;
+  const { phone, offerId, amount, recipientPhone } = parsed.data;
   const offer = allOffers.find((o) => o.id === offerId);
 
   if (!offer) {
@@ -41,9 +42,10 @@ router.post("/payments/stkpush", async (req, res): Promise<void> => {
     return;
   }
 
-  req.log.info({ phone, offerId, amount }, "Initiating M-Pesa STK push");
+  req.log.info({ phone, recipientPhone, offerId, amount }, "Initiating M-Pesa STK push");
 
-  const result = await initiateStkPush(phone, amount, offer.name);
+  const desc = recipientPhone ? `${offer.name} for ${recipientPhone}` : offer.name;
+  const result = await initiateStkPush(phone, amount, desc);
 
   if (result.success && result.checkoutRequestId) {
     paymentStore.set(result.checkoutRequestId, {
@@ -51,6 +53,7 @@ router.post("/payments/stkpush", async (req, res): Promise<void> => {
       status: "pending",
       amount,
       phone,
+      recipientPhone: recipientPhone ?? undefined,
       offerName: offer.name,
       createdAt: new Date().toISOString(),
     });
@@ -131,6 +134,7 @@ router.get("/payments/status/:checkoutRequestId", async (req, res): Promise<void
     resultDesc: record.resultDesc ?? null,
     amount: record.amount ?? null,
     phone: record.phone ?? null,
+    recipientPhone: record.recipientPhone ?? null,
     offerName: record.offerName ?? null,
     createdAt: record.createdAt ?? null,
   });

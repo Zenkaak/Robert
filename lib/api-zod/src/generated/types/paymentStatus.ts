@@ -15,5 +15,6 @@ export interface PaymentStatus {
   amount?: number | null;
   phone?: string | null;
   offerName?: string | null;
+  recipientPhone?: string | null;
   createdAt?: string | null;
 }

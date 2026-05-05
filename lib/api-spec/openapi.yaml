@@ -189,7 +189,11 @@ components:
       properties:
         phone:
           type: string
-          description: Customer phone number (254XXXXXXXXX)
+          description: Payer phone number — receives STK push (254XXXXXXXXX)
+        recipientPhone:
+          type: string
+          nullable: true
+          description: Recipient phone number — who receives the bundle (if different from payer)
         offerId:
           type: string
           description: The offer ID to purchase
@@ -239,6 +243,9 @@ components:
           type: string
           nullable: true
         offerName:
+          type: string
+          nullable: true
+        recipientPhone:
           type: string
           nullable: true
         createdAt:

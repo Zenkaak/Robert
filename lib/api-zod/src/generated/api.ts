@@ -76,7 +76,15 @@ export const ListOffersResponse = zod.object({
  * @summary Initiate M-Pesa STK Push for an offer
  */
 export const InitiatePaymentBody = zod.object({
-  phone: zod.string().describe("Customer phone number (254XXXXXXXXX)"),
+  phone: zod
+    .string()
+    .describe("Payer phone number — receives STK push (254XXXXXXXXX)"),
+  recipientPhone: zod
+    .string()
+    .nullish()
+    .describe(
+      "Recipient phone number — who receives the bundle (if different from payer)",
+    ),
   offerId: zod.string().describe("The offer ID to purchase"),
   amount: zod.number().describe("Amount to pay"),
 });
@@ -115,5 +123,6 @@ export const GetPaymentStatusResponse = zod.object({
   amount: zod.number().nullish(),
   phone: zod.string().nullish(),
   offerName: zod.string().nullish(),
+  recipientPhone: zod.string().nullish(),
   createdAt: zod.string().nullish(),
 });

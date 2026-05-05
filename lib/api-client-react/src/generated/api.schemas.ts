@@ -38,8 +38,10 @@ export interface OffersResponse {
 }
 
 export interface StkPushRequest {
-  /** Customer phone number (254XXXXXXXXX) */
+  /** Payer phone number — receives STK push (254XXXXXXXXX) */
   phone: string;
+  /** Recipient phone number — who receives the bundle (if different from payer) */
+  recipientPhone?: string | null;
   /** The offer ID to purchase */
   offerId: string;
   /** Amount to pay */
@@ -70,6 +72,7 @@ export interface PaymentStatus {
   amount?: number | null;
   phone?: string | null;
   offerName?: string | null;
+  recipientPhone?: string | null;
   createdAt?: string | null;
 }
 
