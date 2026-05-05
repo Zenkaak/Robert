@@ -316,11 +316,10 @@ export default function Home() {
                 <p className="text-sm font-black text-white tracking-tight">BINGWA OFFERS</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 text-xs text-slate-500 bg-white/[0.03] border border-white/5 px-3 py-2 rounded-lg">
+            <div className="flex items-center gap-2 text-xs text-slate-500 bg-white/[0.03] border border-white/5 px-3 py-2 rounded-lg">
               <CreditCard className="w-3.5 h-3.5 text-primary shrink-0" />
-              <span>Till: <span className="font-black text-white tracking-widest">4336560</span></span>
-              <span className="text-white/20">|</span>
-              <span>Shortcode: <span className="font-black text-white tracking-widest">4561041</span></span>
+              <span>M-Pesa Till:</span>
+              <span className="font-black text-white tracking-widest">4336560</span>
             </div>
           </div>
 
