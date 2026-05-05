@@ -88,7 +88,7 @@ export async function initiateStkPush(
       BusinessShortCode: SHORTCODE,
       Password: password,
       Timestamp: timestamp,
-      TransactionType: "CustomerBuyGoods",
+      TransactionType: "CustomerBuyGoodsOnline",
       Amount: Math.ceil(amount),
       PartyA: formattedPhone,
       PartyB: TILL_NUMBER,
