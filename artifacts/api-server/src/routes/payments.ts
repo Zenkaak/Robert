@@ -1,8 +1,8 @@
 import { Router, type IRouter } from "express";
-import { initiateStkPush } from "../lib/mpesa";
+import { initiateStkPush } from "../lib/mpesa.js";
 import { InitiatePaymentBody, GetPaymentStatusParams } from "@workspace/api-zod";
-import { OFFERS } from "./offers";
-import { logger } from "../lib/logger";
+import { OFFERS } from "./offers.js";
+import { logger } from "../lib/logger.js";
 
 const router: IRouter = Router();
 
