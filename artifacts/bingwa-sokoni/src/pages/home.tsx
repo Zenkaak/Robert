@@ -260,19 +260,12 @@ export default function Home() {
             <p className="text-slate-400 text-xs leading-relaxed">
               You can buy bundles offline by sending money directly to our M-Pesa Till. After payment, WhatsApp us with your phone number and the bundle you want.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="flex items-center gap-3 bg-black/30 rounded-lg px-3 py-2.5 border border-white/5">
                 <CreditCard className="w-4 h-4 text-primary shrink-0" />
                 <div>
                   <p className="text-[10px] text-slate-500 uppercase tracking-wider">M-Pesa Till</p>
                   <p className="text-lg font-black text-white tracking-widest">4336560</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 bg-black/30 rounded-lg px-3 py-2.5 border border-white/5">
-                <CreditCard className="w-4 h-4 text-blue-400 shrink-0" />
-                <div>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider">Shortcode</p>
-                  <p className="text-lg font-black text-white tracking-widest">4561041</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-black/30 rounded-lg px-3 py-2.5 border border-white/5">
