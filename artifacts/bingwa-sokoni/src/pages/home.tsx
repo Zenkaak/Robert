@@ -13,6 +13,9 @@ import {
   Headphones,
   BadgeCheck,
   SlidersHorizontal,
+  CreditCard,
+  Store,
+  MessageCircle,
 } from "lucide-react";
 import type { Offer } from "@workspace/api-client-react/src/generated/api.schemas";
 
@@ -246,7 +249,98 @@ export default function Home() {
             )}
           </>
         )}
+
+        {/* Offline purchase card */}
+        <div className="rounded-xl border border-white/8 bg-[#131720] overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-white/[0.02]">
+            <Store className="w-4 h-4 text-primary" />
+            <span className="text-sm font-bold text-white">Offline Purchase</span>
+          </div>
+          <div className="px-4 py-4 space-y-3 text-sm text-slate-300">
+            <p className="text-slate-400 text-xs leading-relaxed">
+              You can buy bundles offline by sending money directly to our M-Pesa Till. After payment, WhatsApp us with your phone number and the bundle you want.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex items-center gap-3 bg-black/30 rounded-lg px-3 py-2.5 border border-white/5">
+                <CreditCard className="w-4 h-4 text-primary shrink-0" />
+                <div>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider">M-Pesa Till Number</p>
+                  <p className="text-lg font-black text-white tracking-widest">4336560</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 bg-black/30 rounded-lg px-3 py-2.5 border border-white/5">
+                <Phone className="w-4 h-4 text-green-400 shrink-0" />
+                <div>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider">Business Name</p>
+                  <p className="text-sm font-bold text-white">Robert Lengou</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2.5 space-y-1 text-xs text-slate-400">
+              <p className="font-semibold text-primary text-[11px] uppercase tracking-wide">Steps</p>
+              <p>1. Send the exact bundle amount to <span className="text-white font-bold">Till 4336560</span></p>
+              <p>2. WhatsApp us your M-Pesa number &amp; the bundle you want</p>
+              <p>3. Bundle is activated instantly after confirmation</p>
+            </div>
+            <a
+              href="https://wa.me/254114200533"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-[#25D366]/10 border border-[#25D366]/30 text-[#25D366] text-sm font-semibold hover:bg-[#25D366]/20 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" />
+              WhatsApp Us — +254 114 200 533
+            </a>
+          </div>
+        </div>
       </main>
+
+      {/* ── Footer ── */}
+      <footer className="border-t border-white/5 bg-[#0a0e15] mt-6">
+        <div className="max-w-5xl mx-auto px-4 py-6 space-y-4">
+          {/* Brand row */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+                <Wifi className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 leading-none">Robert Lengou</p>
+                <p className="text-sm font-black text-white tracking-tight">BINGWA OFFERS</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-slate-500 bg-white/[0.03] border border-white/5 px-3 py-2 rounded-lg">
+              <CreditCard className="w-3.5 h-3.5 text-primary" />
+              <span>M-Pesa Till:</span>
+              <span className="font-black text-white tracking-widest">4336560</span>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-white/5" />
+
+          {/* Bottom row */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-slate-600">
+            <p>© {new Date().getFullYear()} Robert Lengou Bingwa Offers. All rights reserved.</p>
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck className="w-3 h-3 text-primary" />
+              <span>Payments secured by M-Pesa</span>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* ── WhatsApp floating button ── */}
+      <a
+        href="https://wa.me/254114200533"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-5 right-5 z-50 flex items-center gap-2 bg-[#25D366] hover:bg-[#20c05a] text-white px-4 py-3 rounded-full shadow-xl shadow-black/40 transition-all hover:scale-105 active:scale-95 group"
+        aria-label="Chat on WhatsApp"
+      >
+        <MessageCircle className="w-5 h-5 shrink-0" />
+        <span className="text-sm font-bold hidden sm:inline">WhatsApp Us</span>
+      </a>
 
       {selectedOffer && (
         <PaymentModal
