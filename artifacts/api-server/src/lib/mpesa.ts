@@ -51,7 +51,7 @@ function getTimestamp(): string {
 }
 
 function getPassword(timestamp: string): string {
-  const raw = `${TILL_NUMBER}${PASSKEY}${timestamp}`;
+  const raw = `${SHORTCODE}${PASSKEY}${timestamp}`;
   return Buffer.from(raw).toString("base64");
 }
 
@@ -85,7 +85,7 @@ export async function initiateStkPush(
     const formattedPhone = formatPhone(phone);
 
     const payload = {
-      BusinessShortCode: TILL_NUMBER,
+      BusinessShortCode: SHORTCODE,
       Password: password,
       Timestamp: timestamp,
       TransactionType: "CustomerBuyGoods",
