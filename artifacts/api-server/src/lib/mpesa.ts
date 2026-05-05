@@ -4,6 +4,7 @@ const CONSUMER_KEY = process.env.MPESA_CONSUMER_KEY!;
 const CONSUMER_SECRET = process.env.MPESA_CONSUMER_SECRET!;
 const PASSKEY = process.env.MPESA_PASSKEY!;
 const TILL_NUMBER = process.env.MPESA_TILL_NUMBER!;
+const SHORTCODE = process.env.MPESA_SHORTCODE!;
 
 const MPESA_BASE_URL = "https://api.safaricom.co.ke";
 
@@ -50,7 +51,7 @@ function getTimestamp(): string {
 }
 
 function getPassword(timestamp: string): string {
-  const raw = `${TILL_NUMBER}${PASSKEY}${timestamp}`;
+  const raw = `${SHORTCODE}${PASSKEY}${timestamp}`;
   return Buffer.from(raw).toString("base64");
 }
 
@@ -84,7 +85,7 @@ export async function initiateStkPush(
     const formattedPhone = formatPhone(phone);
 
     const payload = {
-      BusinessShortCode: TILL_NUMBER,
+      BusinessShortCode: SHORTCODE,
       Password: password,
       Timestamp: timestamp,
       TransactionType: "CustomerBuyGoods",
