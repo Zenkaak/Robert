@@ -8,9 +8,112 @@
 import * as zod from "zod";
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
+});
+
+/**
+ * @summary List all available offers grouped by category
+ */
+export const ListOffersResponse = zod.object({
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      data: zod.string().nullish(),
+      minutes: zod.string().nullish(),
+      sms: zod.string().nullish(),
+      price: zod.number(),
+      validity: zod.string(),
+      category: zod.enum(["data", "minutes", "sms", "data_multiple"]),
+      multipleAllowed: zod.boolean(),
+    }),
+  ),
+  minutes: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      data: zod.string().nullish(),
+      minutes: zod.string().nullish(),
+      sms: zod.string().nullish(),
+      price: zod.number(),
+      validity: zod.string(),
+      category: zod.enum(["data", "minutes", "sms", "data_multiple"]),
+      multipleAllowed: zod.boolean(),
+    }),
+  ),
+  sms: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      data: zod.string().nullish(),
+      minutes: zod.string().nullish(),
+      sms: zod.string().nullish(),
+      price: zod.number(),
+      validity: zod.string(),
+      category: zod.enum(["data", "minutes", "sms", "data_multiple"]),
+      multipleAllowed: zod.boolean(),
+    }),
+  ),
+  data_multiple: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      data: zod.string().nullish(),
+      minutes: zod.string().nullish(),
+      sms: zod.string().nullish(),
+      price: zod.number(),
+      validity: zod.string(),
+      category: zod.enum(["data", "minutes", "sms", "data_multiple"]),
+      multipleAllowed: zod.boolean(),
+    }),
+  ),
+});
+
+/**
+ * @summary Initiate M-Pesa STK Push for an offer
+ */
+export const InitiatePaymentBody = zod.object({
+  phone: zod.string().describe("Customer phone number (254XXXXXXXXX)"),
+  offerId: zod.string().describe("The offer ID to purchase"),
+  amount: zod.number().describe("Amount to pay"),
+});
+
+export const InitiatePaymentResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string(),
+  checkoutRequestId: zod.string().nullish(),
+  merchantRequestId: zod.string().nullish(),
+});
+
+/**
+ * @summary M-Pesa payment callback
+ */
+export const MpesaCallbackBody = zod.object({
+  Body: zod.record(zod.string(), zod.unknown()),
+});
+
+export const MpesaCallbackResponse = zod.object({
+  ResultCode: zod.number(),
+  ResultDesc: zod.string(),
+});
+
+/**
+ * @summary Get payment status by checkout request ID
+ */
+export const GetPaymentStatusParams = zod.object({
+  checkoutRequestId: zod.coerce.string(),
+});
+
+export const GetPaymentStatusResponse = zod.object({
+  checkoutRequestId: zod.string(),
+  status: zod.enum(["pending", "success", "failed"]),
+  resultCode: zod.string().nullish(),
+  resultDesc: zod.string().nullish(),
+  amount: zod.number().nullish(),
+  phone: zod.string().nullish(),
+  offerName: zod.string().nullish(),
+  createdAt: zod.string().nullish(),
 });

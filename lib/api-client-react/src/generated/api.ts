@@ -5,18 +5,30 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  CallbackAck,
+  ErrorResponse,
+  HealthStatus,
+  MpesaCallbackPayload,
+  OffersResponse,
+  PaymentStatus,
+  StkPushRequest,
+  StkPushResponse,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -25,7 +37,6 @@ type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const getHealthCheckUrl = () => {
@@ -92,6 +103,345 @@ export function useHealthCheck<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getHealthCheckQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List all available offers grouped by category
+ */
+export const getListOffersUrl = () => {
+  return `/api/offers`;
+};
+
+export const listOffers = async (
+  options?: RequestInit,
+): Promise<OffersResponse> => {
+  return customFetch<OffersResponse>(getListOffersUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListOffersQueryKey = () => {
+  return [`/api/offers`] as const;
+};
+
+export const getListOffersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listOffers>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listOffers>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListOffersQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listOffers>>> = ({
+    signal,
+  }) => listOffers({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listOffers>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListOffersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listOffers>>
+>;
+export type ListOffersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all available offers grouped by category
+ */
+
+export function useListOffers<
+  TData = Awaited<ReturnType<typeof listOffers>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listOffers>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListOffersQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Initiate M-Pesa STK Push for an offer
+ */
+export const getInitiatePaymentUrl = () => {
+  return `/api/payments/stkpush`;
+};
+
+export const initiatePayment = async (
+  stkPushRequest: StkPushRequest,
+  options?: RequestInit,
+): Promise<StkPushResponse> => {
+  return customFetch<StkPushResponse>(getInitiatePaymentUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(stkPushRequest),
+  });
+};
+
+export const getInitiatePaymentMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof initiatePayment>>,
+    TError,
+    { data: BodyType<StkPushRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof initiatePayment>>,
+  TError,
+  { data: BodyType<StkPushRequest> },
+  TContext
+> => {
+  const mutationKey = ["initiatePayment"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof initiatePayment>>,
+    { data: BodyType<StkPushRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return initiatePayment(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type InitiatePaymentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof initiatePayment>>
+>;
+export type InitiatePaymentMutationBody = BodyType<StkPushRequest>;
+export type InitiatePaymentMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Initiate M-Pesa STK Push for an offer
+ */
+export const useInitiatePayment = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof initiatePayment>>,
+    TError,
+    { data: BodyType<StkPushRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof initiatePayment>>,
+  TError,
+  { data: BodyType<StkPushRequest> },
+  TContext
+> => {
+  return useMutation(getInitiatePaymentMutationOptions(options));
+};
+
+/**
+ * @summary M-Pesa payment callback
+ */
+export const getMpesaCallbackUrl = () => {
+  return `/api/payments/callback`;
+};
+
+export const mpesaCallback = async (
+  mpesaCallbackPayload: MpesaCallbackPayload,
+  options?: RequestInit,
+): Promise<CallbackAck> => {
+  return customFetch<CallbackAck>(getMpesaCallbackUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(mpesaCallbackPayload),
+  });
+};
+
+export const getMpesaCallbackMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof mpesaCallback>>,
+    TError,
+    { data: BodyType<MpesaCallbackPayload> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof mpesaCallback>>,
+  TError,
+  { data: BodyType<MpesaCallbackPayload> },
+  TContext
+> => {
+  const mutationKey = ["mpesaCallback"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof mpesaCallback>>,
+    { data: BodyType<MpesaCallbackPayload> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return mpesaCallback(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MpesaCallbackMutationResult = NonNullable<
+  Awaited<ReturnType<typeof mpesaCallback>>
+>;
+export type MpesaCallbackMutationBody = BodyType<MpesaCallbackPayload>;
+export type MpesaCallbackMutationError = ErrorType<unknown>;
+
+/**
+ * @summary M-Pesa payment callback
+ */
+export const useMpesaCallback = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof mpesaCallback>>,
+    TError,
+    { data: BodyType<MpesaCallbackPayload> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof mpesaCallback>>,
+  TError,
+  { data: BodyType<MpesaCallbackPayload> },
+  TContext
+> => {
+  return useMutation(getMpesaCallbackMutationOptions(options));
+};
+
+/**
+ * @summary Get payment status by checkout request ID
+ */
+export const getGetPaymentStatusUrl = (checkoutRequestId: string) => {
+  return `/api/payments/status/${checkoutRequestId}`;
+};
+
+export const getPaymentStatus = async (
+  checkoutRequestId: string,
+  options?: RequestInit,
+): Promise<PaymentStatus> => {
+  return customFetch<PaymentStatus>(getGetPaymentStatusUrl(checkoutRequestId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetPaymentStatusQueryKey = (checkoutRequestId: string) => {
+  return [`/api/payments/status/${checkoutRequestId}`] as const;
+};
+
+export const getGetPaymentStatusQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPaymentStatus>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  checkoutRequestId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPaymentStatus>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetPaymentStatusQueryKey(checkoutRequestId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getPaymentStatus>>
+  > = ({ signal }) =>
+    getPaymentStatus(checkoutRequestId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!checkoutRequestId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPaymentStatus>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetPaymentStatusQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPaymentStatus>>
+>;
+export type GetPaymentStatusQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get payment status by checkout request ID
+ */
+
+export function useGetPaymentStatus<
+  TData = Awaited<ReturnType<typeof getPaymentStatus>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  checkoutRequestId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPaymentStatus>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetPaymentStatusQueryOptions(
+    checkoutRequestId,
+    options,
+  );
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

@@ -8,3 +8,83 @@
 export interface HealthStatus {
   status: string;
 }
+
+export type OfferCategory = (typeof OfferCategory)[keyof typeof OfferCategory];
+
+export const OfferCategory = {
+  data: "data",
+  minutes: "minutes",
+  sms: "sms",
+  data_multiple: "data_multiple",
+} as const;
+
+export interface Offer {
+  id: string;
+  name: string;
+  data?: string | null;
+  minutes?: string | null;
+  sms?: string | null;
+  price: number;
+  validity: string;
+  category: OfferCategory;
+  multipleAllowed: boolean;
+}
+
+export interface OffersResponse {
+  data: Offer[];
+  minutes: Offer[];
+  sms: Offer[];
+  data_multiple: Offer[];
+}
+
+export interface StkPushRequest {
+  /** Customer phone number (254XXXXXXXXX) */
+  phone: string;
+  /** The offer ID to purchase */
+  offerId: string;
+  /** Amount to pay */
+  amount: number;
+}
+
+export interface StkPushResponse {
+  success: boolean;
+  message: string;
+  checkoutRequestId?: string | null;
+  merchantRequestId?: string | null;
+}
+
+export type PaymentStatusStatus =
+  (typeof PaymentStatusStatus)[keyof typeof PaymentStatusStatus];
+
+export const PaymentStatusStatus = {
+  pending: "pending",
+  success: "success",
+  failed: "failed",
+} as const;
+
+export interface PaymentStatus {
+  checkoutRequestId: string;
+  status: PaymentStatusStatus;
+  resultCode?: string | null;
+  resultDesc?: string | null;
+  amount?: number | null;
+  phone?: string | null;
+  offerName?: string | null;
+  createdAt?: string | null;
+}
+
+export type MpesaCallbackPayloadBody = { [key: string]: unknown };
+
+export interface MpesaCallbackPayload {
+  Body: MpesaCallbackPayloadBody;
+}
+
+export interface CallbackAck {
+  ResultCode: number;
+  ResultDesc: string;
+}
+
+export interface ErrorResponse {
+  error: string;
+  message: string;
+}

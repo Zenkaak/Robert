@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Bingwa Sokoni"
+version = "1.0.0"
+id = "artifacts/bingwa-sokoni"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23118
+
+[services.development]
+run = "pnpm --filter @workspace/bingwa-sokoni run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/bingwa-sokoni", "run", "build" ]
+publicDir = "artifacts/bingwa-sokoni/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23118"
+BASE_PATH = "/"

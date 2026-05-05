@@ -6,4 +6,15 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./callbackAck";
+export * from "./errorResponse";
 export * from "./healthStatus";
+export * from "./mpesaCallbackPayload";
+export * from "./mpesaCallbackPayloadBody";
+export * from "./offer";
+export * from "./offerCategory";
+export * from "./offersResponse";
+export * from "./paymentStatus";
+export * from "./paymentStatusStatus";
+export * from "./stkPushRequest";
+export * from "./stkPushResponse";

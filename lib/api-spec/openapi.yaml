@@ -10,13 +10,16 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: offers
+    description: Bundle offers
+  - name: payments
+    description: M-Pesa payment operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +27,95 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /offers:
+    get:
+      operationId: listOffers
+      tags: [offers]
+      summary: List all available offers grouped by category
+      responses:
+        "200":
+          description: All offers grouped by category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OffersResponse"
+
+  /payments/stkpush:
+    post:
+      operationId: initiatePayment
+      tags: [payments]
+      summary: Initiate M-Pesa STK Push for an offer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StkPushRequest"
+      responses:
+        "200":
+          description: STK push initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StkPushResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /payments/callback:
+    post:
+      operationId: mpesaCallback
+      tags: [payments]
+      summary: M-Pesa payment callback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MpesaCallbackPayload"
+      responses:
+        "200":
+          description: Callback acknowledged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallbackAck"
+
+  /payments/status/{checkoutRequestId}:
+    get:
+      operationId: getPaymentStatus
+      tags: [payments]
+      summary: Get payment status by checkout request ID
+      parameters:
+        - name: checkoutRequestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Payment status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentStatus"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +126,155 @@ components:
       required:
         - status
 
+    Offer:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        data:
+          type: string
+          nullable: true
+        minutes:
+          type: string
+          nullable: true
+        sms:
+          type: string
+          nullable: true
+        price:
+          type: number
+        validity:
+          type: string
+        category:
+          type: string
+          enum: [data, minutes, sms, data_multiple]
+        multipleAllowed:
+          type: boolean
+      required:
+        - id
+        - name
+        - price
+        - validity
+        - category
+        - multipleAllowed
+
+    OffersResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Offer"
+        minutes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Offer"
+        sms:
+          type: array
+          items:
+            $ref: "#/components/schemas/Offer"
+        data_multiple:
+          type: array
+          items:
+            $ref: "#/components/schemas/Offer"
+      required:
+        - data
+        - minutes
+        - sms
+        - data_multiple
+
+    StkPushRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          description: Customer phone number (254XXXXXXXXX)
+        offerId:
+          type: string
+          description: The offer ID to purchase
+        amount:
+          type: number
+          description: Amount to pay
+      required:
+        - phone
+        - offerId
+        - amount
+
+    StkPushResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        checkoutRequestId:
+          type: string
+          nullable: true
+        merchantRequestId:
+          type: string
+          nullable: true
+      required:
+        - success
+        - message
+
+    PaymentStatus:
+      type: object
+      properties:
+        checkoutRequestId:
+          type: string
+        status:
+          type: string
+          enum: [pending, success, failed]
+        resultCode:
+          type: string
+          nullable: true
+        resultDesc:
+          type: string
+          nullable: true
+        amount:
+          type: number
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        offerName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          nullable: true
+      required:
+        - checkoutRequestId
+        - status
+
+    MpesaCallbackPayload:
+      type: object
+      properties:
+        Body:
+          type: object
+          additionalProperties: true
+      required:
+        - Body
+
+    CallbackAck:
+      type: object
+      properties:
+        ResultCode:
+          type: integer
+        ResultDesc:
+          type: string
+      required:
+        - ResultCode
+        - ResultDesc
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+        - message
