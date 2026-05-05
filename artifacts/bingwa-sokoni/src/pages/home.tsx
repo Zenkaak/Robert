@@ -44,7 +44,7 @@ const TRUST_ITEMS = [
 ];
 
 function Ticker() {
-  const text = "Best bundle offers in Kenya — Instant activation, 24/7 — ROBERT LENGOU BINGWA OFFERS — ";
+  const text = "Best bundle offers in Kenya — Instant activation, 24/7 — KIMLEZO OFFERS — ";
   return (
     <div className="bg-primary/10 border-y border-primary/20 py-1.5 overflow-hidden">
       <div className="flex whitespace-nowrap animate-[marquee_30s_linear_infinite]">
@@ -94,8 +94,8 @@ export default function Home() {
               <Wifi className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="text-[11px] text-slate-400 leading-none">Robert Lengou</p>
-              <p className="text-base font-black text-white tracking-tight leading-tight">BINGWA OFFERS</p>
+              <p className="text-[11px] text-slate-400 leading-none">KIMLEZO</p>
+              <p className="text-base font-black text-white tracking-tight leading-tight">KIMLEZO OFFERS</p>
             </div>
           </div>
 
@@ -272,7 +272,7 @@ export default function Home() {
                 <Phone className="w-4 h-4 text-green-400 shrink-0" />
                 <div>
                   <p className="text-[10px] text-slate-500 uppercase tracking-wider">Business Name</p>
-                  <p className="text-sm font-bold text-white">Robert Lengou</p>
+                  <p className="text-sm font-bold text-white">KIMLEZO</p>
                 </div>
               </div>
             </div>
@@ -305,8 +305,8 @@ export default function Home() {
                 <Wifi className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="text-xs text-slate-500 leading-none">Robert Lengou</p>
-                <p className="text-sm font-black text-white tracking-tight">BINGWA OFFERS</p>
+                <p className="text-xs text-slate-500 leading-none">KIMLEZO</p>
+                <p className="text-sm font-black text-white tracking-tight">KIMLEZO OFFERS</p>
               </div>
             </div>
             <div className="flex items-center gap-2 text-xs text-slate-500 bg-white/[0.03] border border-white/5 px-3 py-2 rounded-lg">
@@ -321,7 +321,7 @@ export default function Home() {
 
           {/* Bottom row */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-slate-600">
-            <p>© {new Date().getFullYear()} Robert Lengou Bingwa Offers. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} KIMLEZO. All rights reserved.</p>
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="w-3 h-3 text-primary" />
               <span>Payments secured by M-Pesa</span>
