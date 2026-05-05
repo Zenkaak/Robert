@@ -1,7 +1,8 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useListOffers } from "@workspace/api-client-react";
 import { OfferRow } from "@/components/offer-row";
 import { PaymentModal } from "@/components/payment-modal";
+import { HistoryDrawer } from "@/components/history-drawer";
 import {
   Search,
   Wifi,
@@ -16,16 +17,17 @@ import {
   CreditCard,
   Store,
   MessageCircle,
+  History,
 } from "lucide-react";
 import type { Offer } from "@workspace/api-client-react/src/generated/api.schemas";
 
 type Tab = "data" | "data_multiple" | "minutes" | "sms";
 
 const TABS: { id: Tab; label: string; icon: React.ElementType; note: string; color: string }[] = [
-  { id: "data",          label: "Data",          icon: Wifi,          note: "Once per day",      color: "text-green-400"  },
-  { id: "data_multiple", label: "Data Boosters", icon: Zap,           note: "Multiple times",    color: "text-blue-400"   },
-  { id: "minutes",       label: "Minutes",       icon: Phone,         note: "Multiple times",    color: "text-purple-400" },
-  { id: "sms",           label: "SMS",           icon: MessageSquare, note: "Multiple times",    color: "text-orange-400" },
+  { id: "data",          label: "Data",          icon: Wifi,          note: "Once per day",   color: "text-green-400"  },
+  { id: "data_multiple", label: "Data Boosters", icon: Zap,           note: "Multiple times", color: "text-blue-400"   },
+  { id: "minutes",       label: "Minutes",       icon: Phone,         note: "Multiple times", color: "text-purple-400" },
+  { id: "sms",           label: "SMS",           icon: MessageSquare, note: "Multiple times", color: "text-orange-400" },
 ];
 
 const CATEGORY_CARDS = [
@@ -63,6 +65,7 @@ export default function Home() {
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("data");
   const [search, setSearch] = useState("");
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const activeOffers: Offer[] = useMemo(() => {
     if (!offersData) return [];
@@ -100,8 +103,17 @@ export default function Home() {
           </div>
 
           {/* Right */}
-          <div className="flex items-center gap-3 text-xs text-slate-400">
-            <span>Secured by <span className="text-primary font-bold">M-Pesa</span></span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setHistoryOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:border-white/20 transition-all text-xs text-slate-300 font-semibold"
+            >
+              <History className="w-3.5 h-3.5" />
+              <span>History</span>
+            </button>
+            <span className="text-xs text-slate-500 hidden sm:block">
+              Secured by <span className="text-primary font-bold">M-Pesa</span>
+            </span>
           </div>
         </div>
 
@@ -156,10 +168,8 @@ export default function Home() {
 
         {/* Tab pills + search */}
         <div className="flex flex-col sm:flex-row gap-2.5 items-start sm:items-center">
-          {/* Pill tabs */}
           <div className="flex gap-1.5 overflow-x-auto scrollbar-hide shrink-0">
             {TABS.map((tab) => {
-              const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
                 <button
@@ -185,14 +195,14 @@ export default function Home() {
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={`Search packages (e.g. 1GB, midnight...)`}
+              placeholder="Search packages (e.g. 1GB, midnight...)"
               className="w-full pl-8 pr-10 py-2 bg-[#131720] border border-white/8 rounded-lg text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-primary/50 transition-colors"
             />
             <SlidersHorizontal className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-600" />
           </div>
         </div>
 
-        {/* Offer count + purchase note */}
+        {/* Offer count + note */}
         <div className="flex items-center justify-between text-xs">
           <span className="text-slate-500">
             {activeOffers.length} package{activeOffers.length !== 1 ? "s" : ""}
@@ -206,7 +216,7 @@ export default function Home() {
           </span>
         </div>
 
-        {/* Loading skeletons */}
+        {/* Loading */}
         {isLoading && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {[...Array(6)].map((_, i) => (
@@ -229,7 +239,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Two-column offer grid */}
+        {/* Offer grid */}
         {!isLoading && !error && (
           <>
             {activeOffers.length === 0 ? (
@@ -258,7 +268,7 @@ export default function Home() {
           </div>
           <div className="px-4 py-4 space-y-3 text-sm text-slate-300">
             <p className="text-slate-400 text-xs leading-relaxed">
-              You can buy bundles offline by sending money directly to our M-Pesa Till. After payment, WhatsApp us with your phone number and the bundle you want.
+              Send money directly to our M-Pesa Till. Your bundle is activated automatically — no need to send any message.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="flex items-center gap-3 bg-black/30 rounded-lg px-3 py-2.5 border border-white/5">
@@ -277,10 +287,10 @@ export default function Home() {
               </div>
             </div>
             <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2.5 space-y-1 text-xs text-slate-400">
-              <p className="font-semibold text-primary text-[11px] uppercase tracking-wide">Steps</p>
-              <p>1. Send the exact bundle amount to <span className="text-white font-bold">Till 4336560</span></p>
-              <p>2. WhatsApp us your M-Pesa number &amp; the bundle you want</p>
-              <p>3. Bundle is activated instantly after confirmation</p>
+              <p className="font-semibold text-primary text-[11px] uppercase tracking-wide">How it works</p>
+              <p>1. Select your bundle above and tap to buy</p>
+              <p>2. Send the exact amount to <span className="text-white font-bold">Till 4336560</span></p>
+              <p>3. Bundle activates automatically on your number</p>
             </div>
             <a
               href="https://wa.me/254114200533"
@@ -289,7 +299,7 @@ export default function Home() {
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-[#25D366]/10 border border-[#25D366]/30 text-[#25D366] text-sm font-semibold hover:bg-[#25D366]/20 transition-colors"
             >
               <MessageCircle className="w-4 h-4" />
-              WhatsApp Us — +254 114 200 533
+              WhatsApp — +254 114 200 533
             </a>
           </div>
         </div>
@@ -298,7 +308,6 @@ export default function Home() {
       {/* ── Footer ── */}
       <footer className="border-t border-white/5 bg-[#0a0e15] mt-6">
         <div className="max-w-5xl mx-auto px-4 py-6 space-y-4">
-          {/* Brand row */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
@@ -315,11 +324,7 @@ export default function Home() {
               <span className="font-black text-white tracking-widest">4336560</span>
             </div>
           </div>
-
-          {/* Divider */}
           <div className="border-t border-white/5" />
-
-          {/* Bottom row */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-slate-600">
             <p>© {new Date().getFullYear()} Robert Lengou Bingwa Offers. All rights reserved.</p>
             <div className="flex items-center gap-1.5">
@@ -335,12 +340,15 @@ export default function Home() {
         href="https://wa.me/254114200533"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-5 right-5 z-50 flex items-center gap-2 bg-[#25D366] hover:bg-[#20c05a] text-white px-4 py-3 rounded-full shadow-xl shadow-black/40 transition-all hover:scale-105 active:scale-95 group"
+        className="fixed bottom-5 right-5 z-50 flex items-center gap-2 bg-[#25D366] hover:bg-[#20c05a] text-white px-4 py-3 rounded-full shadow-xl shadow-black/40 transition-all hover:scale-105 active:scale-95"
         aria-label="Chat on WhatsApp"
       >
         <MessageCircle className="w-5 h-5 shrink-0" />
         <span className="text-sm font-bold hidden sm:inline">WhatsApp Us</span>
       </a>
+
+      {/* ── Modals ── */}
+      <HistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} />
 
       {selectedOffer && (
         <PaymentModal
