@@ -1,6 +1,7 @@
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { execSync } from "node:child_process";
 import { build as esbuild } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
 import { rm, mkdir, copyFile, writeFile, readdir } from "node:fs/promises";
@@ -9,8 +10,20 @@ import { rm, mkdir, copyFile, writeFile, readdir } from "node:fs/promises";
 globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
+// Monorepo root is two levels up from artifacts/api-server
+const monorepoRoot = path.resolve(artifactDir, "../..");
 
 async function buildAll() {
+  // Step 1: Compile @workspace/api-zod to JavaScript first so esbuild can
+  // resolve it (package.json exports "./dist/index.js") and so Vercel
+  // serverless functions can import it at runtime.
+  const apiZodDir = path.resolve(monorepoRoot, "lib/api-zod");
+  const tscBin = path.resolve(monorepoRoot, "node_modules/.bin/tsc");
+  console.log("Building @workspace/api-zod...");
+  execSync(`"${tscBin}" -p tsconfig.json`, { cwd: apiZodDir, stdio: "inherit" });
+  console.log("✓ @workspace/api-zod compiled to lib/api-zod/dist/");
+
+  // Step 2: Bundle the api-server with esbuild
   const distDir = path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
 
@@ -25,11 +38,6 @@ async function buildAll() {
     outdir: distDir,
     outExtension: { ".js": ".mjs" },
     logLevel: "info",
-    // Some packages may not be bundleable, so we externalize them, we can add more here as needed.
-    // Some of the packages below may not be imported or installed, but we're adding them in case they are in the future.
-    // Examples of unbundleable packages:
-    // - uses native modules and loads them dynamically (e.g. sharp)
-    // - use path traversal to read files (e.g. @google-cloud/secret-manager loads sibling .proto files)
     external: [
       "*.node",
       "sharp",
@@ -106,10 +114,8 @@ async function buildAll() {
     ],
     sourcemap: "linked",
     plugins: [
-      // pino relies on workers to handle logging, instead of externalizing it we use a plugin to handle it
-      esbuildPluginPino({ transports: ["pino-pretty"] })
+      esbuildPluginPino({ transports: ["pino-pretty"] }),
     ],
-    // Make sure packages that are cjs only (e.g. express) but are bundled continue to work in our esm output file
     banner: {
       js: `import { createRequire as __bannerCrReq } from 'node:module';
 import __bannerPath from 'node:path';
@@ -122,15 +128,14 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     },
   });
 
-  // Vercel Build Output API v3: write the pre-built function so Vercel
-  // deploys the esbuild bundle directly, bypassing @vercel/node auto-detection.
-  const vercelOutDir = path.resolve(artifactDir, ".vercel", "output");
+  // Step 3: Vercel Build Output API v3 — write to the MONOREPO ROOT so Vercel
+  // finds it (the Vercel project root is the monorepo root, not artifacts/api-server).
+  const vercelOutDir = path.resolve(monorepoRoot, ".vercel", "output");
   const funcDir = path.resolve(vercelOutDir, "functions", "index.func");
 
   await rm(vercelOutDir, { recursive: true, force: true });
   await mkdir(funcDir, { recursive: true });
 
-  // Copy all esbuild output files into the function directory
   const distFiles = await readdir(distDir);
   await Promise.all(
     distFiles.map((f) =>
@@ -138,7 +143,6 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     )
   );
 
-  // Tell Vercel which file is the function entry and which Node.js runtime to use
   await writeFile(
     path.resolve(funcDir, ".vc-config.json"),
     JSON.stringify(
@@ -152,7 +156,6 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     )
   );
 
-  // Route all requests to this function
   await writeFile(
     path.resolve(vercelOutDir, "config.json"),
     JSON.stringify(
@@ -165,7 +168,7 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     )
   );
 
-  console.log("✓ Vercel Build Output written to .vercel/output/");
+  console.log("✓ Vercel Build Output written to .vercel/output/ (monorepo root)");
 }
 
 buildAll().catch((err) => {
