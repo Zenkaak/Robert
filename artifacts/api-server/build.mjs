@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
-import { rm } from "node:fs/promises";
+import { rm, mkdir, copyFile, writeFile, readdir } from "node:fs/promises";
 
 // Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
 globalThis.require = createRequire(import.meta.url);
@@ -121,6 +121,51 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     `,
     },
   });
+
+  // Vercel Build Output API v3: write the pre-built function so Vercel
+  // deploys the esbuild bundle directly, bypassing @vercel/node auto-detection.
+  const vercelOutDir = path.resolve(artifactDir, ".vercel", "output");
+  const funcDir = path.resolve(vercelOutDir, "functions", "index.func");
+
+  await rm(vercelOutDir, { recursive: true, force: true });
+  await mkdir(funcDir, { recursive: true });
+
+  // Copy all esbuild output files into the function directory
+  const distFiles = await readdir(distDir);
+  await Promise.all(
+    distFiles.map((f) =>
+      copyFile(path.resolve(distDir, f), path.resolve(funcDir, f))
+    )
+  );
+
+  // Tell Vercel which file is the function entry and which Node.js runtime to use
+  await writeFile(
+    path.resolve(funcDir, ".vc-config.json"),
+    JSON.stringify(
+      {
+        runtime: "nodejs20.x",
+        handler: "vercel-entry.mjs",
+        launcherType: "Nodejs",
+      },
+      null,
+      2
+    )
+  );
+
+  // Route all requests to this function
+  await writeFile(
+    path.resolve(vercelOutDir, "config.json"),
+    JSON.stringify(
+      {
+        version: 3,
+        routes: [{ src: "/(.*)", dest: "/index" }],
+      },
+      null,
+      2
+    )
+  );
+
+  console.log("✓ Vercel Build Output written to .vercel/output/");
 }
 
 buildAll().catch((err) => {
