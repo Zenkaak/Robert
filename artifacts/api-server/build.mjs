@@ -4,26 +4,33 @@ import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
 import { build as esbuild } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
-import { rm, mkdir, copyFile, writeFile, readdir } from "node:fs/promises";
+import { rm, mkdir, copyFile, writeFile, readdir, cp } from "node:fs/promises";
 
 // Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
 globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
-// Monorepo root is two levels up from artifacts/api-server
 const monorepoRoot = path.resolve(artifactDir, "../..");
 
 async function buildAll() {
-  // Step 1: Compile @workspace/api-zod to JavaScript first so esbuild can
-  // resolve it (package.json exports "./dist/index.js") and so Vercel
-  // serverless functions can import it at runtime.
+  // ── Step 1: Compile @workspace/api-zod ──────────────────────────────────
   const apiZodDir = path.resolve(monorepoRoot, "lib/api-zod");
   const tscBin = path.resolve(monorepoRoot, "node_modules/.bin/tsc");
   console.log("Building @workspace/api-zod...");
   execSync(`"${tscBin}" -p tsconfig.json`, { cwd: apiZodDir, stdio: "inherit" });
-  console.log("✓ @workspace/api-zod compiled to lib/api-zod/dist/");
+  console.log("✓ @workspace/api-zod compiled");
 
-  // Step 2: Bundle the api-server with esbuild
+  // ── Step 2: Build Vite frontend ─────────────────────────────────────────
+  const frontendDir = path.resolve(monorepoRoot, "artifacts/bingwa-sokoni");
+  console.log("Building frontend...");
+  execSync("pnpm --filter @workspace/bingwa-sokoni run build", {
+    cwd: monorepoRoot,
+    stdio: "inherit",
+    env: { ...process.env, PORT: "3000", BASE_PATH: "/" },
+  });
+  console.log("✓ Frontend built");
+
+  // ── Step 3: Bundle API server with esbuild ──────────────────────────────
   const distDir = path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
 
@@ -127,15 +134,22 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     `,
     },
   });
+  console.log("✓ API server bundled");
 
-  // Step 3: Vercel Build Output API v3 — write to the MONOREPO ROOT so Vercel
-  // finds it (the Vercel project root is the monorepo root, not artifacts/api-server).
+  // ── Step 4: Write Vercel Build Output API v3 ─────────────────────────────
   const vercelOutDir = path.resolve(monorepoRoot, ".vercel", "output");
-  const funcDir = path.resolve(vercelOutDir, "functions", "index.func");
+  const staticDir = path.resolve(vercelOutDir, "static");
+  const funcDir = path.resolve(vercelOutDir, "functions", "api.func");
 
   await rm(vercelOutDir, { recursive: true, force: true });
+  await mkdir(staticDir, { recursive: true });
   await mkdir(funcDir, { recursive: true });
 
+  // Copy frontend build → .vercel/output/static/
+  const frontendDist = path.resolve(frontendDir, "dist/public");
+  await cp(frontendDist, staticDir, { recursive: true });
+
+  // Copy API bundle → .vercel/output/functions/api.func/
   const distFiles = await readdir(distDir);
   await Promise.all(
     distFiles.map((f) =>
@@ -143,6 +157,7 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     )
   );
 
+  // Serverless function config
   await writeFile(
     path.resolve(funcDir, ".vc-config.json"),
     JSON.stringify(
@@ -156,19 +171,26 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     )
   );
 
+  // Routing: /api/* → function, everything else → static SPA
   await writeFile(
     path.resolve(vercelOutDir, "config.json"),
     JSON.stringify(
       {
         version: 3,
-        routes: [{ src: "/(.*)", dest: "/index" }],
+        routes: [
+          { src: "/api/(.*)", dest: "/api" },
+          { handle: "filesystem" },
+          { src: "/(.*)", dest: "/index.html" },
+        ],
       },
       null,
       2
     )
   );
 
-  console.log("✓ Vercel Build Output written to .vercel/output/ (monorepo root)");
+  console.log("✓ Vercel Build Output written to .vercel/output/");
+  console.log("  → Static frontend: .vercel/output/static/");
+  console.log("  → API function:    .vercel/output/functions/api.func/");
 }
 
 buildAll().catch((err) => {
