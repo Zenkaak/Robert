@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { PaymentStatusStatus } from "./paymentStatusStatus";
+import type { PaymentStatusStatus } from "./paymentStatusStatus.js";
 
 export interface PaymentStatus {
   checkoutRequestId: string;
